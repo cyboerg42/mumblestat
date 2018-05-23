@@ -4,7 +4,9 @@ you want to check mumble from a cli? now you can!
 
 ## usage
 
-./mping IP PORT INTERVAL
+make
+sudo make install
+mstat IP PORT INTERVAL
 
 ## conclusion
 
