@@ -19,6 +19,7 @@
 int PORT=64738;   // default port
 int S_TIME=3; // default sleep
 int COUNT=-1;
+struct timeval timeout={2,0};
 
 
 int string_in(char *my_str, char *string_list[], size_t num_strings)
@@ -126,12 +127,11 @@ int main(int argc, char *argv[])
         if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) {
 	        die("sendto()");
         }
-        memset(buf,'\0', BUFLEN);
-        if (recvfrom(s, buf, BUFLEN, 0, (struct sockaddr *) &si_other, &slen) == -1) {
-            die("recvfrom()");
-        }
+  memset(buf,'\0', BUFLEN);
+  sleep(1);
+  if (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) break;
 	uint64_t time2 = get_posix_clock_time();
-	float ping = (time2 - time1)/1000.0;
+	float ping = ((time2 - time1)/1000.0)-1000;
 	int *response = decodePingResponse(buf);
 	printf("Users : %i/%i - %.2f ms\n", *(response + 0), *(response + 1), ping);
 	sleep(S_TIME);
