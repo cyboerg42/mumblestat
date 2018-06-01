@@ -1,4 +1,4 @@
-# mumbleping
+# mumblestat
 
 you want to check mumble from a cli? now you can!
 
