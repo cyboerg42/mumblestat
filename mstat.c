@@ -13,13 +13,15 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "decode.c"
+
 
 #define BUFLEN 512  // max length of buffer
 #define MUMBLE_PING {0x00,0x00,0x00,0x00,0x13,0x37,0x42,0x00,0x11,0x10,0x01,0x00} // 4 byte 0x00 - 8 byte ident
 int PORT=64738;   // default port
 int S_TIME=3; // default sleep
 int COUNT=-1;
-int timeout=1;
+int timeout=1000;
 
 int string_in(char *my_str, char *string_list[], size_t num_strings)
 {
@@ -71,24 +73,7 @@ void handleArguments(int argc, char *argv[]) {
   }
 }
 
-int * decodePingResponse(char buf[]) {
-  static int decoded[2];
-  unsigned char a[4];
-  a[0] = buf[15];
-  a[1] = buf[14];
-  a[2] = buf[13];
-  a[3] = buf[12];
-  unsigned char b[4];
-  b[0] = buf[19];
-  b[1] = buf[18];
-  b[2] = buf[17];
-  b[3] = buf[16];
-  int users = *(int *)a;
-  int maxusers = *(int *)b;
-  decoded[0] = users;
-  decoded[1] = maxusers;
-  return decoded;
-}
+
 
 uint64_t get_posix_clock_time ()
 {
@@ -123,11 +108,15 @@ int main(int argc, char *argv[])
     uint64_t time1 = get_posix_clock_time();
     if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) die("sendto()");
     memset(buf,'\0', BUFLEN);
-    sleep(timeout);
-    if (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) break;
-    uint64_t time2 = get_posix_clock_time()-(1000000*timeout);
-    float ping = ((time2 - time1)/1000.0);
-    int *response = decodePingResponse(buf);
+    
+    while (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) {
+       if ((((get_posix_clock_time() - time1)/1000.0)) >= 1000) break;
+    }
+    if ((((get_posix_clock_time() - time1)/1000.0)) >= 1000) break;
+
+    uint64_t time2 = get_posix_clock_time();
+    float ping = (((time2 - time1)/1000.0));
+    int *response = decode_ping(buf);
     printf("Users : %i/%i - %.2f ms\n", *(response + 0), *(response + 1), ping);
     COUNT--;
     if (COUNT == 0) break;
