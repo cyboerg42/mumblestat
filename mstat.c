@@ -1,33 +1,24 @@
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <errno.h>
 #include <limits.h>
-#include <sys/time.h>
-#include <time.h>
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <string.h>
 #include <stdbool.h>
 
 #include "decode.c"
-
+#include "microtime.c"
+#include "io.c"
 
 #define BUFLEN 512  // max length of buffer
 #define MUMBLE_PING {0x00,0x00,0x00,0x00,0x13,0x37,0x42,0x00,0x11,0x10,0x01,0x00} // 4 byte 0x00 - 8 byte ident
 u_int16_t PORT=64738;   // default port
 u_int8_t S_TIME=1; // default sleep
-int COUNT=-1;
+u_int16_t COUNT=-1;
+bool no_c=true;
 u_int16_t timeout=1000;
-
-u_int8_t string_in(char *my_str, char *string_list[], size_t num_strings)
-{
-  for ( int i = 0; i < num_strings; i++ ) if (strcmp(my_str, string_list[i]) == 0 ) return i;
-  return 0;
-}
 
 void handleArguments(int argc, char *argv[]) {
   u_int8_t tmp = string_in("-p", argv, argc);
@@ -51,6 +42,7 @@ void handleArguments(int argc, char *argv[]) {
     if (!(errno != 0 || *p != '\0' || conv > INT_MAX)) {
       num = conv;
       COUNT = num;
+			no_c=false;
     }
   }
 
@@ -65,27 +57,7 @@ void handleArguments(int argc, char *argv[]) {
       S_TIME = num;
     }
   }
-
-  tmp = string_in("-h", argv, argc);
-  if (tmp > 0) {
-    printf("where you are, there is no help. i'm sorry.\n");
-    exit(0);
-  }
 }
-
-uint64_t get_posix_clock_time ()
-{
-  struct timespec ts;
-  if (clock_gettime (CLOCK_MONOTONIC, &ts) == 0) return (uint64_t) (ts.tv_sec * 1000000 + ts.tv_nsec / 1000);
-  else return 0;
-}
-
-void die(char *s)
-{
-  perror(s);
-  exit(1);
-}
-
 
 int main(int argc, char *argv[])
 {
@@ -94,30 +66,23 @@ int main(int argc, char *argv[])
   int s, i, slen=sizeof(si_other);
   char buf[BUFLEN];
   char message[BUFLEN] = MUMBLE_PING;
-  if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) die("socket");
+  if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) p_err("Error opening udp socket!\n");
   memset((char *) &si_other, 0, sizeof(si_other));
   si_other.sin_family = AF_INET;
   si_other.sin_port = htons(PORT);
-  if (inet_aton(argv[1] , &si_other.sin_addr) == 0) {
-    fprintf(stderr, "inet_aton() failed\n");
-    exit(1);
-  }
-  while(1 && COUNT != 0) {
-    uint64_t time1 = get_posix_clock_time();
-    if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) die("sendto()");
+  if (inet_aton(argv[1] , &si_other.sin_addr) == 0) p_err("inet_aton() failed\n");
+  while(1) {
+    long time1 = getMicrotime();
+    if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) p_err("Error sending udp packet!\n");;
     memset(buf,'\0', BUFLEN);
-
     while (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) {
-       if ((((get_posix_clock_time() - time1)/1000.0)) >= timeout) break;
+       if ((((getMicrotime() - time1)/1000.0)) >= timeout) break;
     }
-    if ((((get_posix_clock_time() - time1)/1000.0)) >= timeout) break;
-
-    uint64_t time2 = get_posix_clock_time();
-    float ping = (((time2 - time1)/1000.0));
-    int *response = decode_ping(buf);
-    printf("Users : %i/%i - %.2f ms\n", *(response + 0), *(response + 1), ping);
-    COUNT--;
-    if (COUNT == 0) break;
+    if ((((getMicrotime() - time1)/1000.0)) >= timeout) break;
+    long time2 = getMicrotime();
+    p_png(decode_ping(buf), (((time2 - time1)/1000.0)));
+    if (no_c == false) COUNT--;
+    if (no_c == false && COUNT == 0) break;
     sleep(S_TIME);
   }
   close(s);

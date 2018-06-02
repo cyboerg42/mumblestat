@@ -1,8 +1,8 @@
 CC=gcc
-CXXFLAGS += -march=native -O3 -frename-registers -funroll-loops -Ofast -ansi -DNDEBUG -Wall
+CXXFLAGS += -march=native -mtune=native -Os -frename-registers -funroll-loops -ansi -DNDEBUG -Wall
 
 default:
-	rm -f *.o mstat
+	make clean
 	make mstat
 	strip ./mstat
 
@@ -10,4 +10,4 @@ install: mstat
 	cp mstat /usr/bin
 
 clean:
-	rm mstat
+	rm -f *.o mstat
