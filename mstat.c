@@ -19,7 +19,7 @@
 #define BUFLEN 512  // max length of buffer
 #define MUMBLE_PING {0x00,0x00,0x00,0x00,0x13,0x37,0x42,0x00,0x11,0x10,0x01,0x00} // 4 byte 0x00 - 8 byte ident
 int PORT=64738;   // default port
-int S_TIME=3; // default sleep
+int S_TIME=1; // default sleep
 int COUNT=-1;
 int timeout=1000;
 
