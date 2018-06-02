@@ -8,9 +8,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#include "decode.c"
-#include "microtime.c"
-#include "io.c"
+#include "include/decode.c"
+#include "include/microtime.c"
+#include "include/io.c"
 
 #define BUFLEN 512  // max length of buffer
 #define MUMBLE_PING {0x00,0x00,0x00,0x00,0x13,0x37,0x42,0x00,0x11,0x10,0x01,0x00} // 4 byte 0x00 - 8 byte ident
@@ -72,9 +72,9 @@ int main(int argc, char *argv[])
   si_other.sin_port = htons(PORT);
   if (inet_aton(argv[1] , &si_other.sin_addr) == 0) p_err("inet_aton() failed\n");
   while(1) {
+    memset(buf,'\0', BUFLEN);
     long time1 = getMicrotime();
     if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) p_err("Error sending udp packet!\n");;
-    memset(buf,'\0', BUFLEN);
     while (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) {
        if ((((getMicrotime() - time1)/1000.0)) >= timeout) break;
     }
