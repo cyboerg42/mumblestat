@@ -18,10 +18,10 @@
 
 #define BUFLEN 512  // max length of buffer
 #define MUMBLE_PING {0x00,0x00,0x00,0x00,0x13,0x37,0x42,0x00,0x11,0x10,0x01,0x00} // 4 byte 0x00 - 8 byte ident
-int PORT=64738;   // default port
-int S_TIME=1; // default sleep
+u_int16_t PORT=64738;   // default port
+u_int8_t S_TIME=1; // default sleep
 int COUNT=-1;
-int timeout=1000;
+u_int16_t timeout=1000;
 
 int string_in(char *my_str, char *string_list[], size_t num_strings)
 {
@@ -73,8 +73,6 @@ void handleArguments(int argc, char *argv[]) {
   }
 }
 
-
-
 uint64_t get_posix_clock_time ()
 {
   struct timespec ts;
@@ -108,11 +106,11 @@ int main(int argc, char *argv[])
     uint64_t time1 = get_posix_clock_time();
     if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) die("sendto()");
     memset(buf,'\0', BUFLEN);
-    
+
     while (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) {
-       if ((((get_posix_clock_time() - time1)/1000.0)) >= 1000) break;
+       if ((((get_posix_clock_time() - time1)/1000.0)) >= timeout) break;
     }
-    if ((((get_posix_clock_time() - time1)/1000.0)) >= 1000) break;
+    if ((((get_posix_clock_time() - time1)/1000.0)) >= timeout) break;
 
     uint64_t time2 = get_posix_clock_time();
     float ping = (((time2 - time1)/1000.0));
