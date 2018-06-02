@@ -23,17 +23,17 @@ u_int8_t S_TIME=1; // default sleep
 int COUNT=-1;
 u_int16_t timeout=1000;
 
-int string_in(char *my_str, char *string_list[], size_t num_strings)
+u_int8_t string_in(char *my_str, char *string_list[], size_t num_strings)
 {
   for ( int i = 0; i < num_strings; i++ ) if (strcmp(my_str, string_list[i]) == 0 ) return i;
   return 0;
 }
 
 void handleArguments(int argc, char *argv[]) {
-  int tmp = string_in("-p", argv, argc);
+  u_int8_t tmp = string_in("-p", argv, argc);
   if (tmp > 0) {
     char *p;
-    int num;
+    u_int16_t num;
     errno = 0;
     long conv = strtol(argv[tmp+1], &p, 10);
     if (!(errno != 0 || *p != '\0' || conv > INT_MAX)) {
@@ -42,27 +42,27 @@ void handleArguments(int argc, char *argv[]) {
     }
   }
 
-  tmp = string_in("-s", argv, argc);
-  if (tmp > 0) {
-    char *p;
-    int num;
-    errno = 0;
-    long conv = strtol(argv[tmp+1], &p, 10);
-    if (!(errno != 0 || *p != '\0' || conv > INT_MAX)) {
-      num = conv;
-      S_TIME = num;
-    }
-  }
-
   tmp = string_in("-c", argv, argc);
   if (tmp > 0) {
     char *p;
-    int num;
+    u_int16_t num;
     errno = 0;
     long conv = strtol(argv[tmp+1], &p, 10);
     if (!(errno != 0 || *p != '\0' || conv > INT_MAX)) {
       num = conv;
       COUNT = num;
+    }
+  }
+
+  tmp = string_in("-s", argv, argc);
+  if (tmp > 0) {
+    char *p;
+    u_int8_t num;
+    errno = 0;
+    long conv = strtol(argv[tmp+1], &p, 10);
+    if (!(errno != 0 || *p != '\0' || conv > INT_MAX)) {
+      num = conv;
+      S_TIME = num;
     }
   }
 
