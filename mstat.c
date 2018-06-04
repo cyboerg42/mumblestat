@@ -12,10 +12,10 @@
 #include "include/microtime.c"
 #include "include/io.c"
 
-#define BUFLEN 512  // max length of buffer
+#define BUFLEN 512 // max length of buffer
 #define MUMBLE_PING {0x00,0x00,0x00,0x00,0x13,0x37,0x42,0x00,0x11,0x10,0x01,0x00} // 4 byte 0x00 - 8 byte ident
-u_int16_t PORT=64738;   // default port
-u_int8_t S_TIME=1; // default sleep
+u_int16_t PORT=64738; // default port
+u_int8_t S_TIME=1;  // default sleep
 u_int16_t COUNT=-1;
 bool no_c=true;
 u_int16_t timeout=1000;
@@ -76,10 +76,10 @@ int main(int argc, char *argv[])
     long time1 = getMicrotime();
     if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) p_err("Error sending udp packet!\n");;
     while (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) {
-       if ((((getMicrotime() - time1)/1000.0)) >= timeout) break;
+      if ((((getMicrotime() - time1)/1000.0)) >= timeout) break;
     }
-    if ((((getMicrotime() - time1)/1000.0)) >= timeout) break;
     long time2 = getMicrotime();
+    if ((((time2 - time1)/1000.0)) >= timeout) break;
     p_png(decode_ping(buf), (((time2 - time1)/1000.0)));
     if (no_c == false) COUNT--;
     if (no_c == false && COUNT == 0) break;
