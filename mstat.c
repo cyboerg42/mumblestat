@@ -76,10 +76,13 @@ int main(int argc, char *argv[])
     long time1 = getMicrotime();
     if (sendto(s, message, 12 , 0 , (struct sockaddr *) &si_other, slen)==-1) p_err("Error sending udp packet!\n");;
     while (recvfrom(s, buf, BUFLEN, MSG_DONTWAIT, (struct sockaddr *) &si_other, &slen) == -1) {
-      if ((((getMicrotime() - time1)/1000.0)) >= timeout) break;
+      if ((((getMicrotime() - time1)/1000.0)) >= timeout) {
+	p_err("timeout reached! quitting..");
+        close(s);
+        return 1;
+      }
     }
     long time2 = getMicrotime();
-    if ((((time2 - time1)/1000.0)) >= timeout) break;
     p_png(decode_ping(buf), (((time2 - time1)/1000.0)));
     if (no_c == false) COUNT--;
     if (no_c == false && COUNT == 0) break;
